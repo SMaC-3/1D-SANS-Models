@@ -1,9 +1,9 @@
-For your data files, ensure they are 3 column vectors of the form: [q, I, Err].\
-You should copy your data and click paste in MATLAB's 'workspace'.\
-Set the file type to 'Numerical Matrix', rename the file to something appropriate\
-and click import. Then in the workspace, right click your file and save as the same name as the matrix.\
-Make sure that the file is saved in the same place as the model for MATLAB to find the file.\
-\
-It may be possible to set up a more elaborate loading system, but this has not been implemented.\
-\
-Now when you load your file, you just need to type in the name of the file in the loadfile lines.
+For your data files, ensure they are 3 column vectors of the form: [q, I, Err].
+You should copy your data and click paste in MATLAB's 'workspace'.
+Set the file type to 'Numerical Matrix', rename the file to something appropriate
+and click import. Then in the workspace, right click your file and save as the same name as the matrix.
+Make sure that the file is saved in the same place as the model for MATLAB to find the file.
+
+It may be possible to set up a more elaborate loading system, but this has not been implemented.
+
+Now when you load your file, you just need to type in the name of the file in the loadfile lines
