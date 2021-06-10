@@ -13,6 +13,11 @@ Ang = char(197);
 % This model is the ellipsoid model with a Hayter-Penfold-Hansen-Ginoza
 % structure factor to model charged ellipsoidal particles.
 %
+% If you use this model, please cite the paper below regarding the Ginoza
+% structure factor:
+% "A simple and accurate method for calculation of the structure factor of 
+%  interacting charged spheres", J. Colloid Interface Sci. 2014.
+%
 % Load your file below in the appropriate section, where your data file is
 % of the form of 3 column vectors: q, I, err. Also ensure that you cut any
 % points with NaN values, to minimise any issues.

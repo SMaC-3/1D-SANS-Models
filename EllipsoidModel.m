@@ -2,6 +2,9 @@ clc
 clear
 clf
 Ang = char(197);
+
+% 2021
+% Code constructed by Ashley P. Williams, SMaCLab, Monash University, Australia
 %--------------------------------------------------------------------------
 %                            Ellipsoid Form Factor 
 %--------------------------------------------------------------------------
