@@ -7,6 +7,6 @@ Flexible elliptical cylinder model + PRISM (with a levenberg-marquardt fitter)\
 Spherical model\
 Spherical model + Hayter-Penfold-Hansen-Ginoza Structure factor (charged particles)\
 Ellipsoidal model\
-Ellipsoidal model + Hayter-Penfold-Hansen-Ginoza Structure factor (charged particles)\
+Ellipsoidal model + Hayter-Penfold-Hansen-Ginoza Structure factor (charged particles)
 
 
