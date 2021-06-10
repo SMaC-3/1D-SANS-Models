@@ -127,4 +127,5 @@ xlim([xlower, xupper])
 ylim([ylower yupper])
 errorbar(data(:,1),data(:,2),data(:,3),data(:,3),'o','MarkerFaceColor','auto','MarkerSize', 6,'Color','Black')
 plot(I_spherical(:,1),I_spherical(:,2),'Color',[0 0 1],'Linewidth',3)
+legend("Data","Sphere Model")
 
