@@ -8,6 +8,5 @@ Spherical model\
 Spherical model + Hayter-Penfold-Hansen-Ginoza Structure factor (charged particles)\
 Ellipsoidal model\
 Ellipsoidal model + Hayter-Penfold-Hansen-Ginoza Structure factor (charged particles)\
-\
 
 
