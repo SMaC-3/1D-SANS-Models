@@ -56,9 +56,9 @@ Ang = char(197);
 %                               Load File
 %--------------------------------------------------------------------------
 
-filename = "YourFileNameHere";
+filename = "AW08";
 load(filename);
-data = YourFileNameHere;
+data = AW08;
 
 %--------------------------------------------------------------------------
 %                          Plot preferences
@@ -101,7 +101,7 @@ if whichParams == 0
 eta = volumeFraction; % Volume Fraction
 k = 1.730086388;      % Debye Length * effective particle diameter.
 gamma_0 = 117.56;     % Dimensionless energy parameter
-radius = 35;          % Effectve particle radius
+effectiveRadius = 35;          % Effectve particle radius
 s = 1;                % scale for renormalisation
 
 %--------------------------------------------------------------------------
