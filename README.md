@@ -9,4 +9,4 @@ Ellipsoidal model + Hayter-Penfold-Hansen-Ginoza Structure factor (charged parti
 \
 Models to be uploaded shortly:\
 Spherical model\
-Spherical model + Hayter-Penfold-Hansen-Ginoza Structure factor (charged particles)\
+Spherical model + Hayter-Penfold-Hansen-Ginoza Structure factor (charged particles)
