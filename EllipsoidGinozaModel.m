@@ -69,18 +69,18 @@ xlower = 1.5e-3;
 yupper = 1e1;
 ylower = 1e-2;
 
-ShowStructureFactorPlot = 1; % 1 = show SF plot, 0 = Don't show SF plot.
+ShowStructureFactorPlot = 0; % 1 = show SF plot, 0 = Don't show SF plot.
 
 %--------------------------------------------------------------------------
 %                          Ellipsoid parameters
 %--------------------------------------------------------------------------
 
-volumeFraction = 0.025;
-radius_polar = 16;
-radius_equatorial = 23;
+volumeFraction = 0.0225;
+radius_polar = 16.5;
+radius_equatorial = 27;
 SLD = 0.381;
 SLD_solv = 6.3;
-background = 0.0238;
+background = 0.02;
 
 %--------------------------------------------------------------------------
 %                    Ginoza structure factor parameters
@@ -109,13 +109,13 @@ s = 1;                % scale for renormalisation
 elseif whichParams == 1
 %--------------------------------------------------------------------------
 
-chargePerParticle = 20;    % Charge per particle
+chargePerParticle = 45;    % Charge per particle
 dielectricConstant = 78;   % Dielectric constant
-radius = 25;               % particle radius
-ionicStrength = 0.001;     % Ionic strength of solution
+radius = 24.1;               % particle radius
+ionicStrength = 0.007;     % Ionic strength of solution
 temperature = 298;         % Temperature (K)
 counterIonCharge = 1;      % Counterion charge
-s = 0.5524;                % scale for renormalisation
+s = 0.48687;                % scale for renormalisation
 
 %--------------------------------------------------------------------------
 
@@ -126,6 +126,8 @@ avogadrosNum = 6.0221415e23;
 electricCharge = 1.60217657e-19;
 permFreeSpace = 8.85418782e-12;
 boltzmannConstant = 1.3806488e-23;
+
+
 
 diameter = 2*radius*1e-10;
 volume = pi*(diameter)^3/6;
@@ -296,12 +298,14 @@ end
     Ginoza_structure_factor(:,1) = data(:,1);
     Ginoza_structure_factor(:,2) = S_K;
 
-figure(2)
+fig = figure(1);
+set(fig, 'units', 'centimeters', 'position', [10 10 35 15])
+subplot(1,2,1)
 hold on
 box on
+set(gca,'Xscale', 'log','Yscale', 'log','fontweight','bold','Linewidth',2,'fontSize',14)
 xlabel("{\it q} ("+Ang+"^{-1})")
 ylabel("Intensity (cm^{-1})")
-set(gca,'Xscale', 'log','Yscale', 'log','fontweight','bold','Linewidth',2,'fontSize',14)
 xlim([xlower, xupper])
 ylim([ylower yupper])
 errorbar(data(:,1),data(:,2),data(:,3),data(:,3),'o','MarkerFaceColor','auto','MarkerSize', 6,'Color','Black')
@@ -327,8 +331,9 @@ end
 if MSA_contact_val ~= 0
     s_vals = renorm(eta_input,k_input,gamma_0_input,radius);
     figure(1)
+    subplot(1,2,2)
     hold on
-    box on 
+    box on
     set(gca,'Xscale', 'linear','fontweight','bold','Linewidth',2.6,'fontsize',14)
     set(gca,'Yscale', 'linear');
     xlim([0.05 1])
@@ -351,7 +356,7 @@ else
     "MSA contact value is "+MSA_contact_val+". Please consider rescaling so that the MSA contact value is within 3 decimal places of zero."
 end
     
-parameters = ["RenormFactor" 1 s;"MSA Contact Factor" s_vals(1,2) MSA_contact_val;"volumeFraction" eta_input eta; "Kappa" k_input k; "gamma_0" gamma_0_input gamma_0; "effectiveRadius" radius radius; "polarRadius" radius_polar radius_polar; "equatorialRadius" radius_equatorial radius_equatorial; "SLD" SLD SLD; "SLDsolvent" SLD_solv SLD_solv; "Background" background background];
+parameters = ["RenormFactor" 1 s;"MSA Contact Factor" s_vals(1,2) MSA_contact_val;"volumeFraction" eta_input eta; "Kappa" k_input k; "gamma_0" gamma_0_input gamma_0; "Radius used in S(q)" radius radius; "polarRadius" radius_polar radius_polar; "equatorialRadius" radius_equatorial radius_equatorial; "SLD" SLD SLD; "SLDsolvent" SLD_solv SLD_solv; "Background" background background];
 function s_vals = renorm(eta, k, gamma_0,radius)
 
     s_vals = zeros(40,2);

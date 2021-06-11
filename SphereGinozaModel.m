@@ -365,7 +365,7 @@ else
     "MSA contact value is "+MSA_contact_val+". Please consider rescaling so that the MSA contact value is within 3 decimal places of zero."
 end
     
-parameters = ["RenormFactor" 1 s;"MSA Contact Factor" s_vals(1,2) MSA_contact_val;"volumeFraction" eta_input eta; "Kappa" k_input k; "gamma_0" gamma_0_input gamma_0; "effectiveRadius" radius radius; "Radius" radius radius; ; "SLD" SLD SLD; "SLDsolvent" SLD_solv SLD_solv; "Background" background background];
+parameters = ["RenormFactor" 1 s;"MSA Contact Factor" s_vals(1,2) MSA_contact_val;"volumeFraction" eta_input eta; "Kappa" k_input k; "gamma_0" gamma_0_input gamma_0; "Radius used in S(q)" Rad Rad; "Radius" radius radius; ; "SLD" SLD SLD; "SLDsolvent" SLD_solv SLD_solv; "Background" background background];
 function s_vals = renorm(eta, k, gamma_0,effectiveRadius)
 
     s_vals = zeros(40,2);
