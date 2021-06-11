@@ -56,9 +56,9 @@ Ang = char(197);
 %                               Load File
 %--------------------------------------------------------------------------
 
-filename = "AW08";
+filename = "YourFileNameHere";
 load(filename);
-data = AW08;
+data = YourFileNameHere;
 
 %--------------------------------------------------------------------------
 %                          Plot preferences
@@ -101,7 +101,7 @@ if whichParams == 0
 eta = volumeFraction; % Volume Fraction
 k = 1.730086388;      % Debye Length * effective particle diameter.
 gamma_0 = 117.56;     % Dimensionless energy parameter
-effectiveRadius = 35;          % Effectve particle radius
+Rad = 35;             % Particle radius
 s = 1;                % scale for renormalisation
 
 %--------------------------------------------------------------------------
@@ -111,11 +111,11 @@ elseif whichParams == 1
 
 chargePerParticle = 20;    % Charge per particle
 dielectricConstant = 78;   % Dielectric constant
-effectiveRadius = 20;               % Effective particle radius
+Rad = 20;                  % Particle radius
 ionicStrength = 0.001;     % Ionic strength of solution
 temperature = 298;         % Temperature (K)
 counterIonCharge = 1;      % Counterion charge
-s = 1;                % scale for renormalisation
+s = 0.54335;               % Scale for renormalisation
 
 %--------------------------------------------------------------------------
 
@@ -127,7 +127,7 @@ electricCharge = 1.60217657e-19;
 permFreeSpace = 8.85418782e-12;
 boltzmannConstant = 1.3806488e-23;
 
-diameter = 2*effectiveRadius*1e-10;
+diameter = 2*Rad*1e-10;
 volume_effective = pi*(diameter)^3/6;
 n_0 = ((volumeFraction/volume_effective)/1000)/avogadrosNum; 
 n_c = n_0*abs(chargePerParticle);
@@ -198,7 +198,7 @@ eta = eta/s^3;
 k = k/s;
 gamma_0 = gamma_0*s;
 
-diameter = 2*effectiveRadius;
+diameter = 2*Rad;
 x = 1;
 K_w = -gamma_0*exp(-k);
 fy = 3*eta/(1-eta);

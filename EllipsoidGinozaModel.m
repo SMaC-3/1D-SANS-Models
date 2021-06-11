@@ -66,7 +66,7 @@ data = YourFileNameHere;
 
 xupper = 4e-1;
 xlower = 1.5e-3;
-yupper = 1e5;
+yupper = 1e1;
 ylower = 1e-2;
 
 ShowStructureFactorPlot = 1; % 1 = show SF plot, 0 = Don't show SF plot.
@@ -75,9 +75,9 @@ ShowStructureFactorPlot = 1; % 1 = show SF plot, 0 = Don't show SF plot.
 %                          Ellipsoid parameters
 %--------------------------------------------------------------------------
 
-volumeFraction = 0.03;
-radius_polar = 16.5;
-radius_equatorial = 28;
+volumeFraction = 0.025;
+radius_polar = 16;
+radius_equatorial = 23;
 SLD = 0.381;
 SLD_solv = 6.3;
 background = 0.0238;
@@ -101,7 +101,7 @@ if whichParams == 0
 eta = volumeFraction; % Volume Fraction
 k = 1.730086388;      % Debye Length * effective particle diameter.
 gamma_0 = 117.56;     % Dimensionless energy parameter
-radius = 35;          % Effectve particle radius
+radius = 35;          % particle radius
 s = 1;                % scale for renormalisation
 
 %--------------------------------------------------------------------------
@@ -109,13 +109,13 @@ s = 1;                % scale for renormalisation
 elseif whichParams == 1
 %--------------------------------------------------------------------------
 
-chargePerParticle = 17;    % Charge per particle
+chargePerParticle = 20;    % Charge per particle
 dielectricConstant = 78;   % Dielectric constant
-radius = 33;               % Effective particle radius
+radius = 25;               % particle radius
 ionicStrength = 0.001;     % Ionic strength of solution
 temperature = 298;         % Temperature (K)
 counterIonCharge = 1;      % Counterion charge
-s = 0.6226;                % scale for renormalisation
+s = 0.5524;                % scale for renormalisation
 
 %--------------------------------------------------------------------------
 
@@ -149,7 +149,7 @@ end
 %                        Form factor calculation
 %--------------------------------------------------------------------------
 
-vol = (4*pi/3)*radius_polar*radius_equatorial^2;
+vol = (4*pi/3)*radius^3;
 v_square_minus_one = (radius_polar/radius_equatorial)^2-1;
 zm = 0.5;
 zb = 0.5;
@@ -306,7 +306,7 @@ xlim([xlower, xupper])
 ylim([ylower yupper])
 errorbar(data(:,1),data(:,2),data(:,3),data(:,3),'o','MarkerFaceColor','auto','MarkerSize', 6,'Color','Black')
 plot(I_ellipsoid_ginoza(:,1),I_ellipsoid_ginoza(:,2),'Color',[1 0.5 0],'Linewidth',3)
-legend("data","Ellipsoid-Ginoza")
+legend("data","Ellipsoid-Ginoza","Location","southwest")
 
 if ShowStructureFactorPlot == 1
     figure(3)
