@@ -13,5 +13,5 @@ Ellipsoidal model + Hayter-Penfold-Hansen-Ginoza Structure factor (charged parti
 Core-Shell Sphere model\
 Core-Shell Sphere model + Hayter-Penfold-Hansen-Ginoza Structure factor (charged particles)\
 Core-Shell Ellipsoid model\
-Core-Shell Ellipsoid model + Hayter-Penfold-Hansen-Ginoza Structure factor (charged particles)\
+Core-Shell Ellipsoid model + Hayter-Penfold-Hansen-Ginoza Structure factor (charged particles)
 
