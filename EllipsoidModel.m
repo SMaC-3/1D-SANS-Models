@@ -136,7 +136,7 @@ end
 I_ellipsoid(:,2) = I_ellipsoid(:,1);
 I_ellipsoid(:,1) = data(:,1); %[q,I]
 
-parameters = ["Scale" scale; "polarRadius" radius_polar; "equatorialRadius" radius_equatorial; "Thickness" thickness; "SLD" SLD; "SLDsolvent" SLD_solv; "Background" background];
+parameters = ["Scale" scale; "polarRadius" radius_polar; "equatorialRadius" radius_equatorial; "SLD" SLD; "SLDsolvent" SLD_solv; "Background" background];
 
 figure(1)
 hold on
