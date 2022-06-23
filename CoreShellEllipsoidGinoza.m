@@ -7,11 +7,12 @@ Ang = char(197);
 % Code constructed by Ashley P. Williams, SMaCLab, Monash University, Australia
 
 %--------------------------------------------------------------------------
-%              Ellipsoid Form Factor + Ginoza MSA Structure factor. 
+%        Core-Shell Ellipsoid Form Factor + Ginoza MSA Structure factor. 
 %--------------------------------------------------------------------------
 %
-% This model is the ellipsoid model with a Hayter-Penfold-Hansen-Ginoza
-% structure factor to model charged ellipsoidal particles.
+% This model is the core-shell ellipsoid model with a 
+% Hayter-Penfold-Hansen-Ginoza structure factor to model charged 
+% core-shell ellipsoidal particles.
 %
 % If you use this model, please cite the paper below regarding the Ginoza
 % structure factor:
@@ -81,13 +82,15 @@ ShowStructureFactorPlot = 1; % 1 = show SF plot, 0 = Don't show SF plot.
 %                          Ellipsoid parameters
 %--------------------------------------------------------------------------
 
-volumeFraction = 0.032;
-radius_polar = 19;
-radius_equatorial = 31;
-SLD = -0.392;
+volumeFraction = 0.0145;
+radius_polar = 20;
+radius_equatorial = 30;
+thickness = 10;
+SLD_core = -0.392;
+SLD_shell = 1;
 SLD_solv = 6.3;
-background = 0.019;
-PD = 0;
+background = 0.01;
+PD = 0.16;
 
 %--------------------------------------------------------------------------
 %                    Ginoza structure factor parameters
@@ -107,8 +110,8 @@ if whichParams == 0
 
 eta = volumeFraction; % Volume Fraction
 k = 1.8;      % Debye Length * effective particle diameter.
-gamma_0 = 140;     % Dimensionless energy parameter
-radius = 19;          % effective particle radius
+gamma_0 = 117;     % Dimensionless energy parameter
+radius = 30;          % effective particle radius
 s = 0.8631;                % scale for renormalisation
 
 %--------------------------------------------------------------------------
@@ -118,11 +121,11 @@ elseif whichParams == 1
 
 chargePerParticle = 15;    % Charge per particle
 dielectricConstant = 78;   % Dielectric constant
-radius = 25;               % effective radius
-ionicStrength = 0.01;     % Ionic strength of solution (M)
+radius = 30;               % effective radius
+ionicStrength = 0.001;     % Ionic strength of solution (M)
 temperature = 294;         % Temperature (K)
 counterIonCharge = 1;     % Counterion charge
-s = 0.6;                % scale for renormalisation
+s = 0.62;                % scale for renormalisation
 
 %--------------------------------------------------------------------------
 
@@ -155,10 +158,12 @@ end
 %--------------------------------------------------------------------------
 %                        Form factor calculation
 %--------------------------------------------------------------------------
-
-contrast = (SLD-SLD_solv);
-vol = @(r) (4*pi/3)*r^3; % r = polar radius
-v_square_minus_one = @(r) (r/radius_equatorial)^2-1; %r = polar radius
+contrast_core = (SLD_core-SLD_shell);
+contrast_whole = (SLD_shell-SLD_solv);
+volume_core = @ (r) (4*pi/3)*r*radius_equatorial^2; % r = polar radius
+volume_whole = @(r) (4*pi/3)*(r+thickness)*(radius_equatorial+thickness)^2;% r = polar radius
+v_square_minus_one_core = @(r) (r/radius_equatorial)^2-1; % r = polar radius
+v_square_minus_one_shell = @(r) ((r+thickness)/(radius_equatorial+thickness))^2-1; % r = polar radius
 zm = 0.5;
 zb = 0.5;
 
@@ -179,41 +184,46 @@ if PD ~= 0
     dist_r = dist_r/sum(dist_r); %Normalise the distribution weights such that sum = 1.
 
     form = zeros(size(rvals,2),size(data,1));
-    
     for e = 1:size(rvals,2)
         for j = 1:size(data,1)
             for i = 1:gauss_N
                u = gauss_Z(i)*zm +zb;
-               r = radius_equatorial*sqrt(1+u^2*v_square_minus_one(rvals(e)));
-               f = vol(rvals(e))*3*(sin(data(j,1)*r)/(data(j,1)*r)-cos(data(j,1)*r))/(data(j,1)*r)^2;
+               r_core = (radius_equatorial)*sqrt(1+u^2*v_square_minus_one_core(rvals(e)));
+               r_shell = (radius_equatorial+thickness)*sqrt(1+u^2*v_square_minus_one_shell(rvals(e)));
+               f_core = contrast_core*volume_core(rvals(e))*3*(sin(data(j,1)*r_core)-(data(j,1)*r_core*cos(data(j,1)*r_core)))/(data(j,1)*r_core)^3;
+               f_shell = contrast_whole*volume_whole(rvals(e))*3*(sin(data(j,1)*r_shell)-(data(j,1)*r_shell*cos(data(j,1)*r_shell)))/(data(j,1)*r_shell)^3;
+               f = f_core+f_shell;
                form(e,j) = form(e,j)+gauss_W(i)*f^2; 
             end
-            form(e,j) = zm.*form(e,j);
-        end
-        form(e,:) = dist_r(e).*form(e,:);
+            form(e,j) = zm.*form(e,j); %/sum(gaussian weights)
+        end 
+        form(e,:) = dist_r(e).*form(e,:); %weighting per radius
     end
-    
-    for n = 1:size(rvals,2)
-         vol_sum(n) = dist_r(n)*vol(rvals(n));
+
+     for n = 1:size(rvals,2)
+         vol_sum(n) = dist_r(n)*volume_whole(rvals(n));
      end
 
      form = sum(form)/sum(vol_sum); 
-     I_ellipsoid(:,1) = (contrast^2*1e-4).*form; %F^2
 else
     form = zeros(size(data,1),1);
     for j = 1:size(data,1)
         for i = 1:gauss_N
            u = gauss_Z(i)*zm +zb;
-           r = radius_equatorial*sqrt(1+u^2*v_square_minus_one(radius_polar));
-           f = 3*(sin(data(j,1)*r)-(data(j,1)*r*cos(data(j,1)*r)))/(data(j,1)*r)^3;
+           r_core = radius_equatorial*sqrt(1+u^2*v_square_minus_one_core(radius_polar));
+           r_shell = (radius_equatorial+thickness)*sqrt(1+u^2*v_square_minus_one_shell(radius_polar));
+           f_core = contrast_core*volume_core(radius_polar)*(sin(data(j,1)*r_core)-(data(j,1)*r_core*cos(data(j,1)*r_core)))/(data(j,1)*r_core)^3;
+           f_shell = contrast_whole*volume_whole(radius_polar)*(sin(data(j,1)*r_shell)-(data(j,1)*r_shell*cos(data(j,1)*r_shell)))/(data(j,1)*r_shell)^3;
+           f = 3*(f_core+f_shell);
            form(j,1) = form(j,1)+gauss_W(i)*f^2; 
         end
         form(j,1) = zm.*form(j,1);
-        I_ellipsoid(:,1) = (contrast^2*vol(radius_polar)*1e-4).*form; %F^2
     end
 end
 
+I_ellipsoid(:,2) = (1e-4)*form; %F^2
 
+I_ellipsoid(:,1) = data(:,1); %[q,I]
 
 %--------------------------------------------------------------------------
 %                    Structure factor calculation
@@ -332,9 +342,13 @@ for i = 1:size(k_vec,1)
 
     sum(i) = term1+term2+term3+term4+term5+term6+term7;
     S_K(i) = 1/(1-24*eta*sum(i));
-    I_ellipsoid_ginoza(i,2) = I_ellipsoid(i,1).*S_K(i);
+    I_ellipsoid_ginoza(i,2) = I_ellipsoid(i,2).*S_K(i);
 end
+if PD == 0
+    I_ellipsoid_ginoza(:,2) = (volumeFraction/volume_whole(radius_polar)).*I_ellipsoid_ginoza(:,2)+background;
+else
     I_ellipsoid_ginoza(:,2) = (volumeFraction).*I_ellipsoid_ginoza(:,2)+background;
+end
     Ginoza_structure_factor(:,1) = data(:,1);
     Ginoza_structure_factor(:,2) = S_K;
 
@@ -350,7 +364,7 @@ xlim([xlower, xupper])
 ylim([ylower yupper])
 errorbar(data(:,1),data(:,2),data(:,3),data(:,3),'o','MarkerFaceColor','auto','MarkerSize', 6,'Color','Black')
 plot(I_ellipsoid_ginoza(:,1),I_ellipsoid_ginoza(:,2),'Color',[1 0.5 0],'Linewidth',3)
-legend("Data","Ellipsoid-Ginoza","Location","southwest")
+legend("Data","Core-Shell Ellipsoid-Ginoza","Location","southwest")
 
 if ShowStructureFactorPlot == 1
     figure(3)
@@ -377,7 +391,7 @@ if MSA_contact_val ~= 0
     set(gca,'Xscale', 'linear','fontweight','bold','Linewidth',2.6,'fontsize',14)
     set(gca,'Yscale', 'linear');
     xlim([0.05 1])
-    ylim([-3 3])
+    ylim([-100 100])
     xlabel("s")
     ylabel("MSA contact value")
     f = @(x) 0;
@@ -402,8 +416,8 @@ else
     "MSA contact value is "+MSA_contact_val+". Please consider rescaling so that the MSA contact value is within 3 decimal places of zero."
 end
     
-parameters = ["RenormFactor" 1 s;"MSA Contact Factor" s_vals(1,2) MSA_contact_val;"volumeFraction" eta_input eta; "Kappa" k_input k; "gamma_0" gamma_0_input gamma_0; "Radius used in S(q)" radius radius/s; "polarRadius" radius_polar radius_polar; "equatorialRadius" radius_equatorial radius_equatorial; "SLD" SLD SLD; "SLDsolvent" SLD_solv SLD_solv; "Background" background background];
-function s_vals = renorm(eta, k, gamma_0,radius)
+parameters = ["RenormFactor" 1 s;"MSA Contact Factor" s_vals(1,2) MSA_contact_val;"volumeFraction" eta_input eta; "Kappa" k_input k; "gamma_0" gamma_0_input gamma_0; "Radius used in S(q)" radius radius/s; "polarRadius" radius_polar radius_polar; "equatorialRadius" radius_equatorial radius_equatorial; "Thickness" thickness thickness; "SLDcore" SLD_core SLD_core; "SLDshell" SLD_shell SLD_shell; "SLDsolvent" SLD_solv SLD_solv; "Background" background background];
+function s_vals = renorm(eta, k, gamma_0, radius)
 
     s_vals = zeros(9751,2);
     s_vals(:,1) = [1:-0.0001:0.025];

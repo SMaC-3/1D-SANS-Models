@@ -6,11 +6,11 @@ Ang = char(197);
 % 2022
 % Code constructed by Ashley P. Williams, SMaCLab, Monash University, Australia
 %--------------------------------------------------------------------------
-%                            Ellipsoid Form Factor 
+%                       Core-Shell Ellipsoid Form Factor 
 %--------------------------------------------------------------------------
 %
-% This model is the ellipsoid model to fit small–angle neutron scattering 
-% data of ellipsoidal particles.
+% This model is the core-shell ellipsoid model to fit small–angle neutron 
+% scattering data of core-shell ellipsoidal particles.
 %
 % Load your file below in the appropriate section, where your data file is
 % of the form of 3 column vectors: q, I, err. Also ensure that you cut any
@@ -52,13 +52,15 @@ data = data_filename;
 %                          Ellipsoid parameters
 %--------------------------------------------------------------------------
 
-scale = 0.0145;
+scale = 1;
 radius_polar = 20;
 radius_equatorial = 30;
-SLD = -0.392;
+thickness = 10;            %Shell thickness, assumed to be equal everywhere.
+SLD_core = 1;
+SLD_shell = 3;
 SLD_solv = 6.3;
-background = 0.01;
-PD = 0;                  % Dispersity in the polar radius.
+background = 0.001;
+PD = 0.16;                  % Dispersity in the polar radius.
 
 %--------------------------------------------------------------------------
 %                          Plot preferences
@@ -66,15 +68,19 @@ PD = 0;                  % Dispersity in the polar radius.
 
 xupper = 4e-1;
 xlower = 1.5e-3;
-yupper = 1e1;
+yupper = 2e1;
 ylower = 1e-2;
 
 %--------------------------------------------------------------------------
 %                          Ellipsoid calculation
 %--------------------------------------------------------------------------
 
-volume = @ (r) (4*pi/3)*r*radius_equatorial^2; % r = polar radius
-v_square_minus_one = @(r) (r/radius_equatorial)^2-1; % r = polar radius
+contrast_core = (SLD_core-SLD_shell);
+contrast_whole = (SLD_shell-SLD_solv);
+volume_core = @ (r) (4*pi/3)*r*radius_equatorial^2; % r = polar radius
+volume_whole = @(r) (4*pi/3)*(r+thickness)*(radius_equatorial+thickness)^2;% r = polar radius
+v_square_minus_one_core = @(r) (r/radius_equatorial)^2-1; % r = polar radius
+v_square_minus_one_shell = @(r) ((r+thickness)/(radius_equatorial+thickness))^2-1; % r = polar radius
 zm = 0.5;
 zb = 0.5;
 
@@ -99,8 +105,11 @@ if PD ~= 0
         for j = 1:size(data,1)
             for i = 1:gauss_N
                u = gauss_Z(i)*zm +zb;
-               r = radius_equatorial*sqrt(1+u^2*v_square_minus_one(rvals(k)));
-               f = volume(rvals(k))*3*(sin(data(j,1)*r)-(data(j,1)*r*cos(data(j,1)*r)))/(data(j,1)*r)^3;
+               r_core = (radius_equatorial)*sqrt(1+u^2*v_square_minus_one_core(rvals(k)));
+               r_shell = (radius_equatorial+thickness)*sqrt(1+u^2*v_square_minus_one_shell(rvals(k)));
+               f_core = contrast_core*volume_core(rvals(k))*3*(sin(data(j,1)*r_core)-(data(j,1)*r_core*cos(data(j,1)*r_core)))/(data(j,1)*r_core)^3;
+               f_shell = contrast_whole*volume_whole(rvals(k))*3*(sin(data(j,1)*r_shell)-(data(j,1)*r_shell*cos(data(j,1)*r_shell)))/(data(j,1)*r_shell)^3;
+               f = f_core+f_shell;
                form(k,j) = form(k,j)+gauss_W(i)*f^2; 
             end
             form(k,j) = zm.*form(k,j); %/sum(gaussian weights)
@@ -109,7 +118,7 @@ if PD ~= 0
     end
 
      for n = 1:size(rvals,2)
-         vol(n) = dist_r(n)*volume(rvals(n));
+         vol(n) = dist_r(n)*volume_whole(rvals(n));
      end
 
      form = sum(form)/sum(vol); 
@@ -118,25 +127,25 @@ else
     for j = 1:size(data,1)
         for i = 1:gauss_N
            u = gauss_Z(i)*zm +zb;
-           r = radius_equatorial*sqrt(1+u^2*v_square_minus_one(radius_polar));
-           f = 3*(sin(data(j,1)*r)-(data(j,1)*r*cos(data(j,1)*r)))/(data(j,1)*r)^3;
+           r_core = radius_equatorial*sqrt(1+u^2*v_square_minus_one_core(radius_polar));
+           r_shell = (radius_equatorial+thickness)*sqrt(1+u^2*v_square_minus_one_shell(radius_polar));
+           f_core = contrast_core*volume_core(radius_polar)*(sin(data(j,1)*r_core)-(data(j,1)*r_core*cos(data(j,1)*r_core)))/(data(j,1)*r_core)^3;
+           f_shell = contrast_whole*volume_whole(radius_polar)*(sin(data(j,1)*r_shell)-(data(j,1)*r_shell*cos(data(j,1)*r_shell)))/(data(j,1)*r_shell)^3;
+           f = 3*(f_core+f_shell);
            form(j,1) = form(j,1)+gauss_W(i)*f^2; 
         end
         form(j,1) = zm.*form(j,1);
     end
 end
-contrast = (SLD-SLD_solv);
 
 if PD ~= 0
-    I_ellipsoid(:,1) = (scale)*contrast^2*(1e-4).*form+background; %F^2
+    I_ellipsoid(:,2) = (scale)*(1e-4).*form+background; %F^2
 else
-    I_ellipsoid(:,1) = (scale)*volume(radius_polar)*contrast^2*(1e-4).*form+background; %F^2
+    I_ellipsoid(:,2) = (scale)/volume_whole(radius_polar)*(1e-4).*form+background; %F^2
 end
-
-I_ellipsoid(:,2) = I_ellipsoid(:,1);
 I_ellipsoid(:,1) = data(:,1); %[q,I]
 
-parameters = ["Scale" scale; "polarRadius" radius_polar; "equatorialRadius" radius_equatorial; "Thickness" thickness; "SLD" SLD; "SLDsolvent" SLD_solv; "Background" background];
+parameters = ["Scale" scale; "polarRadius" radius_polar; "equatorialRadius" radius_equatorial; "Thickness" thickness; "SLDcore" SLD_core; "SLDshell" SLD_shell; "SLDsolvent" SLD_solv; "Background" background];
 
 figure(1)
 hold on
@@ -148,5 +157,5 @@ xlim([xlower, xupper])
 ylim([ylower yupper])
 errorbar(data(:,1),data(:,2),data(:,3),data(:,3),'o','MarkerFaceColor','auto','MarkerSize', 6,'Color','Black')
 plot(I_ellipsoid(:,1),I_ellipsoid(:,2),'Color',[0 0 1],'Linewidth',3)
-legend("Data","Ellipsoid")
+legend("Data","Core-Shell Ellipsoid")
 

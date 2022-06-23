@@ -3,7 +3,7 @@ clf
 clear
 Ang = char(197);
 
-% 2021
+% 2022
 % Code constructed by Ashley P. Williams, SMaCLab, Monash University, Australia
 
 %--------------------------------------------------------------------------
@@ -56,30 +56,33 @@ Ang = char(197);
 %                               Load File
 %--------------------------------------------------------------------------
 
-filename = "YourFileNameHere";
-load(filename);
-data = YourFileNameHere;
+path = ""; % "../data/" for example, to locate your data.
+filename = path + "data_filename";
+
+load(filename)
+
+data = data_filename;
 
 %--------------------------------------------------------------------------
 %                          Plot preferences
 %--------------------------------------------------------------------------
 
-xupper = 4e-1;
-xlower = 1.5e-3;
-yupper = 1e5;
-ylower = 1e-2;
+xupper = 5e-1;
+xlower = 4e-3;
+yupper = 1e1;
+ylower = 3e-2;
 
-ShowStructureFactorPlot = 1; % 1 = show SF plot, 0 = Don't show SF plot.
+ShowStructureFactorPlot = 0; % 1 = show SF plot, 0 = Don't show SF plot.
 
 %--------------------------------------------------------------------------
 %                          Sphere parameters
 %--------------------------------------------------------------------------
 
-volumeFraction = 0.025;
-radius = 20;
-SLD = 1;
-SLD_solv = 6.3;
-background = 0.001;
+volumeFraction = 0.034;
+radius = 23.8;
+SLD = -0.392;
+SLD_solv = 6.393;
+background = 0.033;
 PD = 0.16;              %Schulz polydispersity              
 
 %--------------------------------------------------------------------------
@@ -109,13 +112,13 @@ s = 1;                % scale for renormalisation
 elseif whichParams == 1
 %--------------------------------------------------------------------------
 
-chargePerParticle = 20;    % Charge per particle
+chargePerParticle = 24;    % Charge per particle
 dielectricConstant = 78;   % Dielectric constant
-Rad = 20;                  % Particle radius
-ionicStrength = 0.001;     % Ionic strength of solution
-temperature = 298;         % Temperature (K)
+Rad = 23.8;                  % Particle radius
+ionicStrength = 0.029;     % Ionic strength of solution
+temperature = 298.15;         % Temperature (K)
 counterIonCharge = 1;      % Counterion charge
-s = 0.54335;               % Scale for renormalisation
+s = 0.6725904;               % Scale for renormalisation
 
 %--------------------------------------------------------------------------
 
@@ -149,43 +152,50 @@ end
 %                          Spherical calculation
 %--------------------------------------------------------------------------
 
-volume = (4*pi/3)*radius^3;
-cont_vol = (SLD-SLD_solv)*volume;
+volume = @ (r) (4*pi/3)*r^3;
+contrast = (SLD-SLD_solv);
 
 I_spherical = zeros(size(data,1),2);
-Form = @(r,q) (3*(sin(q*r)/(q*r)-cos(q*r))/(q*r)^2)^2;
+Form = @(r,q) (1e-4)*(3*contrast*volume(r)*((sin(q*r)-q*r*cos(q*r))/(q*r)^3))^2;
 
 %--------------------------------------------------------------------------
 %                       Schulz-Zimm Polydispersity
 %--------------------------------------------------------------------------
 
 Z = (1-PD^2)/PD^2;
-sz = @(y) ((Z+1)^(Z+1))*((y/radius)^(Z))*exp(-(Z+1)*(y/radius))...
-    /(radius*gamma(Z+1)); %Schulz distribution function
+sz = @(y) (((Z+1)/radius)^(Z+1))*((y)^(Z))*exp(-((Z+1)/radius)*y)...
+    /(gamma(Z+1));
 N_steps = 80;
 dist_r = [];
 rvals = ((radius-3*PD*radius):(6*PD*radius)/N_steps:(radius+3*PD*radius)); %Number of points for PD calculation.
 for j = 1:size(rvals,2)
-    dist_r(1,j) = sz(rvals(1,j)); 
+    dist_r(j) = sz(rvals(j)); 
 end
 dist_r = dist_r/max(dist_r); %Normalise the distribution weights.
 
 if PD ~= 0
     form = [];
+    vol = [];
     for h = 1:(size(data(:,1),1))
         for i = 1:size(rvals,2)
-        form(i,h)=dist_r(1,i)*Form(rvals(1,i),data(h,1));
+           form(i,h)= (dist_r(i)*Form(rvals(i),data(h,1)));
         end
     end
-    form = mean(form/sum(dist_r/(size(dist_r,2)))); 
-else
-    form = [];
-    for h = 1:(size(data(:,1),1))
-        form(1,h) = Form(radius,data(h,1));
+    
+    for i = 1:size(rvals,2)
+       vol(i) = dist_r(i)*volume(rvals(i));
     end
+  
+    form = sum(form)/sum(vol);
+ 
+    else
+        form = [];
+        for h = 1:(size(data(:,1),1))
+            form(1,h) = Form(radius,data(h,1));
+        end
 end
 
-I_spherical(:,2) = (1e-4)*cont_vol^2.*form';
+I_spherical(:,2) = form';
 I_spherical(:,1) = data(:,1); %[q,I]
 %--------------------------------------------------------------------------
 %                    Structure factor calculation
@@ -306,7 +316,11 @@ for i = 1:size(k_vec,1)
     S_K(i) = 1/(1-24*eta*sum(i));
     I_spherical_ginoza(i,2) = I_spherical(i,2).*S_K(i);
 end
-    I_spherical_ginoza(:,2) = (volumeFraction/volume).*I_spherical_ginoza(:,2)+background;
+if PD ~= 0
+    I_spherical_ginoza(:,2) = (volumeFraction).*I_spherical_ginoza(:,2)+background;
+else
+    I_spherical_ginoza(:,2) = (volumeFraction/volume(radius)).*I_spherical_ginoza(:,2)+background;
+end
     Ginoza_structure_factor(:,1) = data(:,1);
     Ginoza_structure_factor(:,2) = S_K;
 
@@ -319,8 +333,8 @@ set(gca,'Xscale', 'log','Yscale', 'log','fontweight','bold','Linewidth',2,'fontS
 xlim([xlower, xupper])
 ylim([ylower yupper])
 errorbar(data(:,1),data(:,2),data(:,3),data(:,3),'o','MarkerFaceColor','auto','MarkerSize', 6,'Color','Black')
-plot(I_spherical_ginoza(:,1),I_spherical_ginoza(:,2),'Color',[1 0.5 0],'Linewidth',3)
-legend("data","Sphere-Ginoza")
+plot(I_spherical_ginoza(:,1),I_spherical_ginoza(:,2),'Color',[0 0 1],'Linewidth',3)
+legend("Data","Sphere-Ginoza")
 
 if ShowStructureFactorPlot == 1
     figure(3)
@@ -346,6 +360,7 @@ if MSA_contact_val ~= 0
     set(gca,'Xscale', 'linear','fontweight','bold','Linewidth',2.6,'fontsize',14)
     set(gca,'Yscale', 'linear');
     xlim([0.05 1])
+    ylim([-5 5])
     xlabel("s")
     ylabel("MSA contact value")
     f = @(x) 0;
