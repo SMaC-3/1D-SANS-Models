@@ -11,7 +11,6 @@
 % Langmuir 2020 36 (47), 14296-14305
 % DOI: 10.1021/acs.langmuir.0c02530
 
-
 % Notes:
 % Please ensure your file is a 3 column numerical matrix [q, I, I_Error].
 % Copy your delimited 3 column data file > Workspace drop-down arrow >
@@ -34,9 +33,12 @@ Ang = char(197);
 %                    Load File and Make An Initial Guess
 %==========================================================================
 
-filename = 'yourfilename_here'; %Insert file name (.mat)
-load(filename);
-data = yourfilename_here;       %filename (no quotations)
+path = ""; % "../data/" for example, to locate your data.
+filename = path + "data_filename";
+
+load(filename)
+
+data = data_filename;
 
 First_point = 2;                % Where to start fitting.
 Last_point = size(data, 1);     % Where to stop fitting.
@@ -44,13 +46,13 @@ Last_point = size(data, 1);     % Where to stop fitting.
 maxEvaluations = 5000;          % Maximum number of fitting evaluations.
 toleranceValue = 1e-7;          % Minimum change in function value.
 
-%Input your initial parameter values below
+%                Input your initial parameter values below
 
 A = 0.05;         % Scale (Effective Volume Fraction)
 r_cs = 19.5;        % Cross-sectional Radius
 BD = 0.018;        % Background.
 L = 3000;         % Contour Length
-B = 16;           % Peak scale, 0 = no structure factor
+B = 100;           % Peak scale, 0 = no structure factor
 b = 200;          % Kuhn Length 
 SLD = 0.382;      % Scattering length density - Cylinder
 SLD_solv = 6.3;   % Scattering length density - solvent
@@ -63,7 +65,7 @@ PD = 0.16;        % Polydispersity, 0 = no polydispersity
 %                  1 = L-M fit, 0 = Manual fit
 %==========================================================================
 
-LM_fit = 1;
+LM_fit = 0;
 
 %==========================================================================
 %      What would you like to keep fixed? 1 = fixed, 0 = to be fit.
@@ -123,7 +125,6 @@ xlim([1e-3, 0.7e0])
 ylim([1e-3, 1e4])
 xlabel("\bf{q (" + Ang + "^{-1})}");
 ylabel("\bf{Intensity (cm^{-1})}");
-
 errorbar(q_data(:,1),I_data(:,1),Err_data(:,1),'black','marker','s','linewidth',2,'linestyle','none')
 plot(q_data(1:size(q_data)-1),I_guess(1:size(I_guess)-1),'Color',[1 0.5 0],'Linewidth',4)
 
@@ -176,23 +177,24 @@ pvals = qvals;
 %==========================================================================
 %                       Schulz-Zimm Polydispersity
 %==========================================================================
-
-Z = (1-PD^2)/PD^2;
-sz = @(x) ((Z+1)^(Z+1))*((x/r_cs)^(Z))*exp(-(Z+1)*(x/r_cs))...
-    /(r_cs*gamma(Z+1)); %Schulz distribution function
-N_steps = 80;
-rvals = ((r_cs-3*PD*r_cs):(6*PD*r_cs)/N_steps:(r_cs+3*PD*r_cs)); %Number of points for PD calculation.
-for j = 1:size(rvals,2)
-    dist_r(1,j) = sz(rvals(1,j)); 
+if PD ~= 0
+    Z = (1-PD^2)/PD^2;
+    sz = @(x) (((Z+1)/r_cs)^(Z+1))*((x)^(Z))*exp(-((Z+1)/r_cs)*x)...
+            /(gamma(Z+1)); %Schulz distribution function
+    N_steps = 80;
+    rvals = ((r_cs-3*PD*r_cs):(6*PD*r_cs)/N_steps:(r_cs+3*PD*r_cs)); %Number of points for PD calculation.
+    for j = 1:size(rvals,2)
+        dist_r(1,j) = sz(rvals(1,j)); 
+    end
+    dist_r = dist_r/max(dist_r); %Normalise the distribution weights.
 end
-dist_r = dist_r/max(dist_r); %Normalise the distribution weights.
 
 %==========================================================================
 %                        Initialise other constants
 %==========================================================================
 
 contrast = (SLD-SLD_solv).^2; % Del ro^2
-volume = 3.1416*r_cs^2*L;
+volume = @(r) pi*r^2*L;
 
 n_b = L./b;
 
@@ -368,7 +370,10 @@ if PD ~= 0
         form(i,h)=dist_r(1,i)*P_CS(rvals(1,i),qvals(1,h));
         end
     end
-    form = mean(form/sum(dist_r/(size(dist_r,2)))); 
+    for f = 1:size(rvals,2)
+       vol_sum(f) =  volume(rvals(f));
+    end
+    form = sum(form)/sum(vol_sum); 
 else
     form = pvals;
     for h = 1:(size(qrange,2)-1)
@@ -383,9 +388,9 @@ if B~=0
         sprism(1,g) = form(1,g)*(pvals(1,g)/(1+bc(qvals(1,g))*pvals(1,g)));
         strucfac(2,g) = 1/(1+bc(qvals(1,g))*pvals(1,g));
     end
-    sprism = volume*1e-4*contrast*A*sprism;
+    sprism = volume(r_cs)^2*1e-4*contrast*A*sprism;
 else
-    pvals = volume*1e-4*contrast*A*form(1,:).*pvals;
+    pvals = volume(r_cs)^2*1e-4*contrast*A*form(1,:).*pvals;
 end
 
 q = qvals(1,:)';
